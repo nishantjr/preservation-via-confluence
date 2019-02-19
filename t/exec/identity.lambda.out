@@ -1,1 +1,1 @@
-V ==K lambda x . x
+V ==K lambda x : int . x

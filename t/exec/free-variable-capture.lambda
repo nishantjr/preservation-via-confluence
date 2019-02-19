@@ -1,1 +1,1 @@
-a (((lambda x.lambda y.x) y) z)
+a (((lambda x:int.lambda y:int.x) y) z)

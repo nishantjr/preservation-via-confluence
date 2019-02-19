@@ -4,18 +4,21 @@ from kninja import *
 import sys
 import os.path
 
-# Project Definition
-# ==================
-
 proj = KProject()
-types = proj.source('types.md') \
-            .then(proj.tangle().output(proj.tangleddir('types.k'))) \
-            .then(proj.kompile(backend = 'java') \
-                      .variables(directory = proj.builddir('types'))).default()
-exec = proj.source('exec.md') \
-             .then(proj.tangle().output(proj.tangleddir('exec.k'))) \
+lambda_k = proj.source('lambda.md').then(proj.tangle().output(proj.tangleddir('lambda.k')))
+
+types = lambda_k \
+            .then(proj.kompile(backend = 'java')
+                      .variables( directory = proj.builddir('types')
+                                , flags = '--main-module TYPES --syntax-module LAMBDA-SYNTAX'
+                                )
+                 ).default()
+exec = lambda_k \
              .then(proj.kompile(backend = 'java') \
-                       .variables(directory = proj.builddir('exec'))).default()
+                      .variables( directory = proj.builddir('exec')
+                               , flags = '--main-module EXEC --syntax-module LAMBDA-SYNTAX'
+                               )
+                 ).default()
 
 def do_test(defn, pattern, input):
     expected = input + '.out'
@@ -34,9 +37,9 @@ typing_test('t/types/ll.lambda')
 
 exec_test('t/exec/arithmetic-div-zero.lambda')
 exec_test('t/exec/arithmetic.lambda')
-exec_test('t/exec/closed-variable-capture.lambda')
-exec_test('t/exec/factorial-let-fix.lambda')
-exec_test('t/exec/factorial-let.lambda')
+# exec_test('t/exec/closed-variable-capture.lambda') # w         cannot be typed
+# exec_test('t/exec/factorial-let-fix.lambda')       # fix/Omega cannot be typed
+# exec_test('t/exec/factorial-let.lambda')           # fix       cannot be typed
 exec_test('t/exec/factorial-letrec.lambda')
 exec_test('t/exec/fibbo.lambda')
 exec_test('t/exec/free-variable-capture.lambda')
