@@ -28,9 +28,9 @@ def do_test(defn, pattern, input):
               .default()
 
 def typing_test(input):
-    return do_test(types, '<k> V:K </k>', input)
+    return do_test(types, '<type> V:K </type>', input)
 def exec_test(input):
-    return do_test(exec, '<k> V:K </k>', input)
+    return do_test(exec, '<exec> V:K </exec>', input)
 
 typing_test('t/types/factorial-letrec.lambda')
 typing_test('t/types/ll.lambda')
