@@ -178,7 +178,7 @@ module TYPE-STRICTNESS
            => expArrow(T1, T2)
               ...
        </type>
-       
+
   rule <type> expArrow(T1:Type, T2:Type)
            => tyArrow(T1, T2)
               ...
