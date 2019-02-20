@@ -20,3 +20,9 @@ proj.source('unit-tests.md') \
     .then(proj.check('/dev/null')) \
     .alias('unit-tests') \
     .default()
+
+proj.source('confluence.md') \
+    .then(proj.tangle().output(proj.tangleddir('confluence-spec.k'))) \
+    .then(lambda_def.kprove()) \
+    .then(proj.check('/dev/null')) \
+    .alias('confluence-tests')
