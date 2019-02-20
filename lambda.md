@@ -205,7 +205,7 @@ module TYPES
 
   rule <type> if bool then T:Type else T => T ... </type>
 
-  rule <type> mu X : T . E => (tyArrow(T, T) (E[T/X])):Exp .. </type>
+  rule <type> mu X : T . E => (tyArrow(T, T) (E[T/X])):Exp ... </type>
 endmodule
 ```
 
