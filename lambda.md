@@ -190,9 +190,6 @@ module TYPES
   imports SUBSTITUTION
   imports TYPE-STRICTNESS
 
-  rule <k> PGM   => .K  </k>
-       <type> .K => PGM </type>
-
   rule <type> _:Int => int ... </type>
   rule <type> _:Bool => bool ... </type>
   rule <type> int * int => int ... </type>
@@ -215,9 +212,6 @@ module EXEC
   imports SUBSTITUTION
   imports EXEC-STRICTNESS
 
-  rule <k> PGM => .K  </k>
-       <exec> .K => PGM </exec>
-
   syntax KVariable ::= Id
 
   rule <exec> (lambda X:Id : _:Type . E:Exp) V:Val => E[V / X] ... </exec>
@@ -231,5 +225,16 @@ module EXEC
   rule <exec> if false then _ else E => E ... </exec>
 
   rule <exec> mu X : T . E => E[(mu X : T . E) / X] ... </exec>
+endmodule
+```
+
+```k
+module LAMBDA
+  imports TYPES
+  imports EXEC
+  
+  rule <k> PGM => .K  </k>
+       <exec> .K => PGM </exec>
+       <type> .K => PGM </type>
 endmodule
 ```

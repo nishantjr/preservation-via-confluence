@@ -7,18 +7,11 @@ import os.path
 proj = KProject()
 lambda_k = proj.source('lambda.md').then(proj.tangle().output(proj.tangleddir('lambda.k')))
 
-types = lambda_k \
-            .then(proj.kompile(backend = 'java')
-                      .variables( directory = proj.builddir('types')
-                                , flags = '--main-module TYPES --syntax-module LAMBDA-SYNTAX'
-                                )
-                 ).default()
-exec = lambda_k \
-             .then(proj.kompile(backend = 'java') \
-                      .variables( directory = proj.builddir('exec')
-                               , flags = '--main-module EXEC --syntax-module LAMBDA-SYNTAX'
-                               )
-                 ).default()
+lambda_def = lambda_k.then(proj.kompile(backend = 'java') \
+                              .variables( directory = proj.builddir('exec')
+                                       , flags = '--main-module LAMBDA --syntax-module LAMBDA-SYNTAX'
+                                       )
+                         ).default()
 
 def do_test(defn, pattern, input):
     expected = input + '.out'
@@ -28,9 +21,9 @@ def do_test(defn, pattern, input):
               .default()
 
 def typing_test(input):
-    return do_test(types, '<type> V:K </type>', input)
+    return do_test(lambda_def, '<type> V:K </type>', input)
 def exec_test(input):
-    return do_test(exec, '<exec> V:K </exec>', input)
+    return do_test(lambda_def, '<exec> V:K </exec>', input)
 
 typing_test('t/types/factorial-letrec.lambda')
 typing_test('t/types/ll.lambda')
