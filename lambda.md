@@ -1,8 +1,4 @@
 ```k
-require "substitution.k"
-```
-
-```k
 module LAMBDA-SYNTAX
   imports DOMAINS
 
@@ -43,6 +39,27 @@ module LAMBDA-CONFIGURATION
                   <type> .K </type>
                 </lambda>
 endmodule
+
+module LAMBDA-SUBSTITUTION
+  imports LAMBDA-CONFIGURATION
+  imports LAMBDA-LAMBDA-SYNTAX
+  
+  symbol Exp ::= substitute(Exp, Id, Exp)
+  rule <exec> substitute(E, X, T) => T ~> substitute(E, X, #hole) ... </exec>
+    requires notBool isVal(T)
+  rule <exec> V:Val ~> substitute(E, X, #hole) => substitute_result(E, X, V)
+              ...
+       </exec>
+ 
+  rule <type> substitute(E, X, T) => T ~> substitute(E, X, #hole) ... </type>
+    requires notBool isType(T)
+  rule <type> V:Type ~> substitute(E, X, #hole) => substitute_result(E, X, V)
+              ...
+       </type>
+       
+  symbol Exp ::= substitute_result(Exp, Id, Exp) [function]
+endmodule
+
 
 module EXEC-STRICTNESS
   imports LAMBDA-SYNTAX
