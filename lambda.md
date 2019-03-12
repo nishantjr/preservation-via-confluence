@@ -36,6 +36,9 @@ module LAMBDA-SYNTAX
     => let F : T1 = mu F : T1 . lambda X : T2 . E in E'               [macro]
 
   syntax Exp ::= "#hole"
+
+  syntax Exp ::= Type
+  syntax Exp ::= Exp "->" Exp [klabel(expArrow)]
 endmodule
 
 module LAMBDA-CONFIGURATION
@@ -99,8 +102,6 @@ module TYPE-STRICTNESS
   imports LAMBDA-CONFIGURATION
   imports EXEC-STRICTNESS
 
-  syntax Exp ::= Type
-
   rule <type> E1 E2 => E1 ~> #hole E2 ... </type>
     requires notBool isType(E1)
   rule <type> T1:Type E2 => E2 ~> T1 #hole ... </type>
@@ -160,7 +161,6 @@ module TYPE-STRICTNESS
               ...
        </type>
 
-  syntax Exp ::= Exp "->" Exp [klabel(expArrow)]
   rule <type> expArrow(E1, E2)
            => E1 ~> expArrow(#hole -> E2)
               ...
@@ -179,11 +179,74 @@ module TYPE-STRICTNESS
            => expArrow(T1, T2)
               ...
        </type>
+endmodule
 
-  rule <type> expArrow(T1:Type, T2:Type)
-           => tyArrow(T1, T2)
-              ...
-       </type>
+module TYPE-FUNCTION
+  imports LAMBDA-SYNTAX
+  imports LAMBDA-CONFIGURATION
+  imports EXEC-STRICTNESS
+  imports SUBSTITUTION
+
+  rule <k> PGM => emptyProgram  </k>
+       <type> emptyProgram => #type(PGM) </type>
+    requires PGM =/=K emptyProgram
+
+  syntax Type ::= "#badType"
+  syntax Type ::= #type(Exp) [function]
+
+  rule #type(E1 E2) => #type(#type(E1) E2)
+    requires notBool isType(E1)
+  rule #type(T1:Type E2) => #type(T1 #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(E1 + E2) => #type(#type(E1) + E2)
+    requires notBool isType(E1)
+  rule #type(T1:Type + E2) => #type(T1 + #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(E1 * E2) => #type(#type(E1) * E2)
+    requires notBool isType(E1)
+  rule #type(T1:Type * E2) => #type(T1 * #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(E1 / E2) => #type(#type(E1) / E2)
+    requires notBool isType(E1)
+  rule #type(T1:Type / E2) => #type(T1 / #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(E1 <= E2) => #type(#type(E1) <= E2)
+    requires notBool isType(E1)
+  rule #type(T1:Type <= E2) => #type(T1 <= #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(if P then E1 else E2) => #type(if #type(P) then E1 else E2)
+    requires notBool isType(P)
+  rule #type(if P:Type then E1 else E2) => #type(if P then #type(E1) else E2)
+    requires notBool isType(E1)
+  rule #type(if P:Type then E1:Type else E2) => #type(if P then E1 else #type(E2))
+    requires notBool isType(E2)
+
+  rule #type(expArrow(E1, E2)) => #type(expArrow(#type(E1), E2))
+    requires notBool isType(E1)
+  rule #type(expArrow(T1:Type, E2)) => #type(expArrow(T1, #type(E2)))
+    requires notBool isType(E2)
+
+  rule #type(_:Int) => int
+  rule #type(_:Bool) => bool
+  rule #type(int * int) => int
+  rule #type(int / int) => int
+  rule #type(int + int) => int
+  rule #type(int <= int) => bool
+
+  rule #type(expArrow(T1:Type, T2:Type)) => tyArrow(T1, T2)
+
+  rule #type(lambda X : T . E) => #type(expArrow(T, (E[T/X]):Exp))
+  rule #type(tyArrow(T1, T2) T1:Type) => T2
+  rule #type(if bool then T:Type else T) => T
+
+  rule #type(mu X : T . E) => #type((tyArrow(T, T) (E[T/X])):Exp)
+
+  rule #type(E) => #badType [owise]
 endmodule
 
 module LAMBDA-SUBSTITUTION
@@ -230,7 +293,13 @@ module TYPES
   imports LAMBDA-SYNTAX
   imports LAMBDA-SUBSTITUTION
   imports TYPE-STRICTNESS
+  imports TYPE-FUNCTION
   imports EXEC
+
+  rule <type> expArrow(T1:Type, T2:Type)
+           => tyArrow(T1, T2)
+              ...
+       </type>
 
   rule <exec> PGM => emptyProgram  </exec>
        <type> emptyProgram => PGM </type>
@@ -243,7 +312,7 @@ module TYPES
   rule <type> int + int => int ... </type>
   rule <type> int <= int => bool ... </type>
 
-  rule <type> lambda X : T . E => T -> (E[T/X]):Exp ... </type>
+  rule <type> lambda X : T . E => expArrow(T, (E[T/X]):Exp) ... </type>
   rule <type> tyArrow(T1, T2) T1:Type => T2 ... </type>
 
   rule <type> if bool then T:Type else T => T ... </type>

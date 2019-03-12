@@ -13,6 +13,12 @@ types = lambda_k \
                                 , flags = '--main-module TYPES --syntax-module LAMBDA-SYNTAX'
                                 )
                  ).default()
+types_function = lambda_k \
+            .then(proj.kompile(backend = 'java')
+                      .variables( directory = proj.builddir('types-function')
+                                , flags = '--main-module TYPE-FUNCTION --syntax-module LAMBDA-SYNTAX'
+                                ) \
+                 ).alias('tyfunc').default()
 exec = lambda_k \
              .then(proj.kompile(backend = 'java') \
                       .variables( directory = proj.builddir('exec')
@@ -29,11 +35,18 @@ def do_test(defn, pattern, input):
 
 def typing_test(input):
     return do_test(types, '<type> V:K </type>', input)
+def typing_func_test(input):
+    return do_test(types_function, '<type> V:K </type>', input)
 def exec_test(input):
     return do_test(exec, '<exec> V:K </exec>', input)
 
 typing_test('t/types/factorial-letrec.lambda')
 typing_test('t/types/ll.lambda')
+typing_test('t/types/bad-type.lambda')
+
+typing_func_test('t/types/factorial-letrec.lambda')
+typing_func_test('t/types/ll.lambda')
+typing_func_test('t/types/bad-type.lambda')
 
 exec_test('t/exec/arithmetic-div-zero.lambda')
 exec_test('t/exec/arithmetic.lambda')
