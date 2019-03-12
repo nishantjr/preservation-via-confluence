@@ -23,9 +23,9 @@ exec = lambda_k \
 def do_test(defn, pattern, input):
     expected = input + '.out'
     return proj.source(input) \
-              .then(defn.krun().variables(flags = '--search --pattern "{}"'.format(pattern))) \
-              .then(proj.check(expected)) \
-              .default()
+               .then(defn.krun().variables(flags = '--search --pattern "{}"'.format(pattern))) \
+               .then(proj.check(expected)) \
+               .default()
 
 def typing_test(input):
     return do_test(types, '<type> V:K </type>', input)
