@@ -1,5 +1,5 @@
 ```k
-require "substitution.k"
+requires "substitution.k"
 ```
 
 ```k
@@ -34,21 +34,22 @@ module LAMBDA-SYNTAX
                | "mu" Id ":" Type "." Exp                             [binder]
   rule letrec F : T1  X : T2 = E in E'
     => let F : T1 = mu F : T1 . lambda X : T2 . E in E'               [macro]
+
+  syntax Exp ::= "#hole"
 endmodule
 
 module LAMBDA-CONFIGURATION
+  syntax K ::= "emptyProgram"
   configuration <lambda>
                   <k> $PGM </k>
-                  <exec> .K </exec>
-                  <type> .K </type>
+                  <exec> emptyProgram ~> .K </exec>
+                  <type> emptyProgram ~> .K </type>
                 </lambda>
 endmodule
 
 module EXEC-STRICTNESS
   imports LAMBDA-SYNTAX
   imports LAMBDA-CONFIGURATION
-
-  syntax Exp ::= "#hole"
 
   rule <exec> E1 E2 => E1 ~> #hole E2 ... </exec>
     requires notBool isVal(E1)
@@ -96,85 +97,85 @@ endmodule
 module TYPE-STRICTNESS
   imports LAMBDA-SYNTAX
   imports LAMBDA-CONFIGURATION
+  imports EXEC-STRICTNESS
 
-  syntax Exp ::= "#tyHole"
   syntax Exp ::= Type
 
-  rule <type> E1 E2 => E1 ~> #tyHole E2 ... </type>
+  rule <type> E1 E2 => E1 ~> #hole E2 ... </type>
     requires notBool isType(E1)
-  rule <type> T1:Type E2 => E2 ~> T1 #tyHole ... </type>
+  rule <type> T1:Type E2 => E2 ~> T1 #hole ... </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> #tyHole E2 => T1 E2 ... </type>
-  rule <type> T2:Type ~> T1 #tyHole => T1 T2 ... </type>
+  rule <type> T1:Type ~> #hole E2 => T1 E2 ... </type>
+  rule <type> T2:Type ~> T1 #hole => T1 T2 ... </type>
 
-  rule <type> E1 + E2 => E1 ~> #tyHole + E2 ... </type>
+  rule <type> E1 + E2 => E1 ~> #hole + E2 ... </type>
     requires notBool isType(E1)
-  rule <type> T1:Type + E2 => E2 ~> T1 + #tyHole ... </type>
+  rule <type> T1:Type + E2 => E2 ~> T1 + #hole ... </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> #tyHole + E2 => T1 + E2 ... </type>
-  rule <type> T2:Type ~> T1 + #tyHole => T1 + T2 ... </type>
+  rule <type> T1:Type ~> #hole + E2 => T1 + E2 ... </type>
+  rule <type> T2:Type ~> T1 + #hole => T1 + T2 ... </type>
 
-  rule <type> E1 * E2 => E1 ~> #tyHole * E2 ... </type>
+  rule <type> E1 * E2 => E1 ~> #hole * E2 ... </type>
     requires notBool isType(E1)
-  rule <type> T1:Type * E2 => E2 ~> T1 * #tyHole ... </type>
+  rule <type> T1:Type * E2 => E2 ~> T1 * #hole ... </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> #tyHole * E2 => T1 * E2 ... </type>
-  rule <type> T2:Type ~> T1 * #tyHole => T1 * T2 ... </type>
+  rule <type> T1:Type ~> #hole * E2 => T1 * E2 ... </type>
+  rule <type> T2:Type ~> T1 * #hole => T1 * T2 ... </type>
 
-  rule <type> E1 / E2 => E1 ~> #tyHole / E2 ... </type>
+  rule <type> E1 / E2 => E1 ~> #hole / E2 ... </type>
     requires notBool isType(E1)
-  rule <type> T1:Type / E2 => E2 ~> T1 / #tyHole ... </type>
+  rule <type> T1:Type / E2 => E2 ~> T1 / #hole ... </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> #tyHole / E2 => T1 / E2 ... </type>
-  rule <type> T2:Type ~> T1 / #tyHole => T1 / T2 ... </type>
+  rule <type> T1:Type ~> #hole / E2 => T1 / E2 ... </type>
+  rule <type> T2:Type ~> T1 / #hole => T1 / T2 ... </type>
 
-  rule <type> E1 <= E2 => E1 ~> #tyHole <= E2 ... </type>
+  rule <type> E1 <= E2 => E1 ~> #hole <= E2 ... </type>
     requires notBool isType(E1)
-  rule <type> T1:Type <= E2 => E2 ~> T1 <= #tyHole ... </type>
+  rule <type> T1:Type <= E2 => E2 ~> T1 <= #hole ... </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> #tyHole <= E2 => T1 <= E2 ... </type>
-  rule <type> T2:Type ~> T1 <= #tyHole => T1 <= T2 ... </type>
+  rule <type> T1:Type ~> #hole <= E2 => T1 <= E2 ... </type>
+  rule <type> T2:Type ~> T1 <= #hole => T1 <= T2 ... </type>
 
   rule <type> if P then E1 else E2
-           => P ~> if #tyHole then E1 else E2 ... </type>
+           => P ~> if #hole then E1 else E2 ... </type>
     requires notBool isType(P)
   rule <type> if P:Type then E1 else E2
-           => E1 ~> if P then #tyHole else E2 ...
+           => E1 ~> if P then #hole else E2 ...
        </type>
     requires notBool isType(E1)
   rule <type> if P:Type then E1:Type else E2
-           => E2 ~> if P then E1 else #tyHole ...
+           => E2 ~> if P then E1 else #hole ...
        </type>
     requires notBool isType(E2)
-  rule <type> T:Type ~> if #tyHole then E1 else E2
+  rule <type> T:Type ~> if #hole then E1 else E2
            => if T then E1 else E2
               ...
        </type>
-  rule <type> T1:Type ~> if T then #tyHole else E2
+  rule <type> T1:Type ~> if T then #hole else E2
            => if T then T1 else E2
               ...
        </type>
-  rule <type> T2:Type ~> if T then T1 else #tyHole
+  rule <type> T2:Type ~> if T then T1 else #hole
            => if T then T1 else T2
               ...
        </type>
 
   syntax Exp ::= Exp "->" Exp [klabel(expArrow)]
   rule <type> expArrow(E1, E2)
-           => E1 ~> expArrow(#tyHole -> E2)
+           => E1 ~> expArrow(#hole -> E2)
               ...
        </type>
     requires notBool isType(E1)
   rule <type> expArrow(T1:Type, E2)
-           => E2 ~> expArrow(T1, #tyHole)
+           => E2 ~> expArrow(T1, #hole)
               ...
        </type>
     requires notBool isType(E2)
-  rule <type> T1:Type ~> expArrow(#tyHole, E2)
+  rule <type> T1:Type ~> expArrow(#hole, E2)
            => T1 -> E2
               ...
        </type>
-  rule <type> T2:Type ~> expArrow(T1, #tyHole)
+  rule <type> T2:Type ~> expArrow(T1, #hole)
            => expArrow(T1, T2)
               ...
        </type>
@@ -185,38 +186,30 @@ module TYPE-STRICTNESS
        </type>
 endmodule
 
-module TYPES
+module LAMBDA-SUBSTITUTION
   imports LAMBDA-SYNTAX
+  imports LAMBDA-CONFIGURATION
+  imports LAMBDA-CONFIGURATION
   imports SUBSTITUTION
-  imports TYPE-STRICTNESS
 
-  rule <k> PGM   => .K  </k>
-       <type> .K => PGM </type>
+  syntax Exp ::= subst(Exp, Exp, Id)
+  rule <exec> subst(E, T, V) => T ~> subst(E, #hole, V) ... </exec>
+    requires notBool isVal(T)
+  rule <type> subst(E, T, V) => T ~> subst(E, #hole, V) ... </type>
+    requires notBool isType(T)
 
-  rule <type> _:Int => int ... </type>
-  rule <type> _:Bool => bool ... </type>
-  rule <type> int * int => int ... </type>
-  rule <type> int / int => int ... </type>
-  rule <type> int + int => int ... </type>
-  rule <type> int <= int => bool ... </type>
-
-  rule <type> lambda X : T . E => T -> (E[T/X]):Exp ... </type>
-  rule <type> tyArrow(T1, T2) T1:Type => T2 ... </type>
-
-  rule <type> if bool then T:Type else T => T ... </type>
-
-  rule <type> mu X : T . E => (tyArrow(T, T) (E[T/X])):Exp ... </type>
+  rule <exec> T:Val  ~> subst(E, #hole, V) => E[T / V] ... </exec>
+  rule <type> T:Type ~> subst(E, #hole, V) => E[T / V] ... </type>
 endmodule
-```
 
-```k
 module EXEC
   imports LAMBDA-SYNTAX
-  imports SUBSTITUTION
+  imports LAMBDA-SUBSTITUTION
   imports EXEC-STRICTNESS
 
-  rule <k> PGM => .K  </k>
-       <exec> .K => PGM </exec>
+  rule <k> PGM => emptyProgram  </k>
+       <exec> emptyProgram => PGM </exec>
+    requires PGM =/=K emptyProgram
 
   syntax KVariable ::= Id
 
@@ -231,5 +224,30 @@ module EXEC
   rule <exec> if false then _ else E => E ... </exec>
 
   rule <exec> mu X : T . E => E[(mu X : T . E) / X] ... </exec>
+endmodule
+
+module TYPES
+  imports LAMBDA-SYNTAX
+  imports LAMBDA-SUBSTITUTION
+  imports TYPE-STRICTNESS
+  imports EXEC
+
+  rule <exec> PGM => emptyProgram  </exec>
+       <type> emptyProgram => PGM </type>
+    requires PGM =/=K emptyProgram
+
+  rule <type> _:Int => int ... </type>
+  rule <type> _:Bool => bool ... </type>
+  rule <type> int * int => int ... </type>
+  rule <type> int / int => int ... </type>
+  rule <type> int + int => int ... </type>
+  rule <type> int <= int => bool ... </type>
+
+  rule <type> lambda X : T . E => T -> (E[T/X]):Exp ... </type>
+  rule <type> tyArrow(T1, T2) T1:Type => T2 ... </type>
+
+  rule <type> if bool then T:Type else T => T ... </type>
+
+  rule <type> mu X : T . E => (tyArrow(T, T) (E[T/X])):Exp ... </type>
 endmodule
 ```
