@@ -280,6 +280,7 @@ module EXEC
 
   rule <exec> I1 * I2 => I1 *Int I2 ... </exec>
   rule <exec> I1 / I2 => I1 /Int I2 ... </exec>
+    requires I2 =/=Int 0
   rule <exec> I1 + I2 => I1 +Int I2 ... </exec>
   rule <exec> I1 <= I2 => I1 <=Int I2 ... </exec>
 
