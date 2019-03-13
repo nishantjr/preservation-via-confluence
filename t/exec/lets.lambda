@@ -1,5 +1,0 @@
-let a:int=1 in
-  let b:int=2 in
-    let c:int=3 in
-      let d:int=4 in
-        ((a+b*c)/d <= a)

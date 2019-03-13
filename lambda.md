@@ -42,12 +42,12 @@ module LAMBDA-SYNTAX
 endmodule
 
 module LAMBDA-CONFIGURATION
-  syntax K ::= "emptyProgram"
-  configuration <lambda>
-                  <k> $PGM </k>
-                  <exec> emptyProgram ~> .K </exec>
-                  <type> emptyProgram ~> .K </type>
-                </lambda>
+  imports LAMBDA-SYNTAX
+  configuration <t>
+                  <k> $PGM:Exp </k>
+                  <exec> .K </exec>
+                  <type> .K </type>
+                </t>
 endmodule
 
 module EXEC-STRICTNESS
@@ -187,10 +187,6 @@ module TYPE-FUNCTION
   imports EXEC-STRICTNESS
   imports SUBSTITUTION
 
-  rule <k> PGM => emptyProgram  </k>
-       <type> emptyProgram => #type(PGM) </type>
-    requires PGM =/=K emptyProgram
-
   syntax Type ::= "#badType"
   syntax Type ::= #type(Exp) [function]
 
@@ -265,14 +261,10 @@ module LAMBDA-SUBSTITUTION
   rule <type> T:Type ~> subst(E, #hole, V) => E[T / V] ... </type>
 endmodule
 
-module EXEC
+module LAMBDA-EXEC
   imports LAMBDA-SYNTAX
   imports LAMBDA-SUBSTITUTION
   imports EXEC-STRICTNESS
-
-  rule <k> PGM => emptyProgram  </k>
-       <exec> emptyProgram => PGM </exec>
-    requires PGM =/=K emptyProgram
 
   syntax KVariable ::= Id
 
@@ -290,21 +282,16 @@ module EXEC
   rule <exec> mu X : T . E => E[(mu X : T . E) / X] ... </exec>
 endmodule
 
-module TYPES
+module LAMBDA-TYPING
   imports LAMBDA-SYNTAX
   imports LAMBDA-SUBSTITUTION
   imports TYPE-STRICTNESS
   imports TYPE-FUNCTION
-  imports EXEC
 
   rule <type> expArrow(T1:Type, T2:Type)
            => tyArrow(T1, T2)
               ...
        </type>
-
-  rule <exec> PGM => emptyProgram  </exec>
-       <type> emptyProgram => PGM </type>
-    requires PGM =/=K emptyProgram
 
   rule <type> _:Int => int ... </type>
   rule <type> _:Bool => bool ... </type>
@@ -319,5 +306,19 @@ module TYPES
   rule <type> if bool then T:Type else T => T ... </type>
 
   rule <type> mu X : T . E => (tyArrow(T, T) (E[T/X])):Exp ... </type>
+endmodule
+```
+
+```k
+module LAMBDA-COMBINED
+  imports LAMBDA-TYPING
+  imports LAMBDA-EXEC
+  imports TYPE-FUNCTION
+
+  syntax KItem ::= "#moveExecToType"
+  rule <k> #moveExecToType => .K ... </k>
+       <exec> CONTENTS:K => .K </exec>
+       <type> .K => CONTENTS </type>
+    requires notBool CONTENTS ==K .K
 endmodule
 ```
