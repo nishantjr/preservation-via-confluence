@@ -1,0 +1,7 @@
+rule pandoc
+  command = pandoc $in -o $out $flags
+
+build presentation.pdf : pandoc presentation.md
+  flags = -t beamer
+build presentation.tex : pandoc presentation.md
+  flags = -t beamer
